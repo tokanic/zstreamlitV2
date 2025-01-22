@@ -7,7 +7,7 @@ import requests
 st.set_page_config(page_title="Binance Our Dashboard", layout="wide")
 
 # Flask API Server URL
-#API_SERVER = "http://34.100.176.18:5001"  
+API_SERVER = "http://34.100.176.18:5001"  
 API_SERVER = "http://34.47.211.154:5001"
 
 # Sidebar
