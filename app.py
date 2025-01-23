@@ -14,7 +14,7 @@ st.set_page_config(
 )
 
 # Configuration and Constants
-API_SERVER = "http://34.47.211.154:5000"  # Replace with your actual server URL
+API_SERVER = "http://34.47.211.154:5001"  # Replace with your actual server URL
 INDIAN_TZ = pytz.timezone('Asia/Kolkata')
 
 # Advanced Helper Functions
