@@ -135,20 +135,28 @@ def trade_history():
     if trade_history_data:
         df = pd.DataFrame(trade_history_data)
         
-        # Format timestamps and PNL
-        df['Trade Time'] = df['Trade Time'].apply(format_timestamp)
-        df['Trade PNL'] = df['Trade PNL'].apply(format_pnl)
+        # Dynamically handle column names
+        time_column = [col for col in df.columns if 'time' in col.lower()]
+        pnl_column = [col for col in df.columns if 'pnl' in col.lower()]
+        
+        # Format timestamps if time column exists
+        if time_column:
+            df[time_column[0]] = df[time_column[0]].apply(format_timestamp)
+        
+        # Format PNL if PNL column exists
+        if pnl_column:
+            df[pnl_column[0]] = df[pnl_column[0]].apply(format_pnl)
         
         # Interactive Data Table
         st.dataframe(df, use_container_width=True)
         
-        # PNL Distribution
-        if 'Trade PNL' in df.columns:
+        # PNL Distribution if PNL column exists
+        if pnl_column:
             fig = px.histogram(
                 df, 
-                x='Trade PNL', 
+                x=pnl_column[0], 
                 title='PNL Distribution',
-                labels={'Trade PNL': 'Trade Profit/Loss'}
+                labels={pnl_column[0]: 'Trade Profit/Loss'}
             )
             st.plotly_chart(fig, use_container_width=True)
     else:
