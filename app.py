@@ -218,7 +218,7 @@ def analytics():
                     "PNL": "Daily Profit/Loss (USDT)"
                 },
                 color="PNL",
-                color_continuous_scale=px.colors.sequential.RdYlGn,
+                color_continuous_scale=px.colors.sequential.YlGnBu,  # Changed color scale
                 color_continuous_midpoint=0
             )
             daily_fig.update_layout(
@@ -296,7 +296,6 @@ def analytics():
             st.plotly_chart(trade_size_fig, use_container_width=True)
     else:
         st.warning("Insufficient data for analytics visualization.")
-
 
 
 # Main Dashboard
