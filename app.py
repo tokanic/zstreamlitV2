@@ -162,38 +162,140 @@ def trade_history():
     else:
         st.warning("No trade history available.")
 
-def analytics():
-    """Advanced Trading Analytics"""
-    st.subheader("Trading Analytics")
-    pnl_data = fetch_data("pnl_analytics")
+# def analytics():
+#     """Advanced Trading Analytics"""
+#     st.subheader("Trading Analytics")
+#     pnl_data = fetch_data("pnl_analytics")
     
-    if pnl_data:
-        df = pd.DataFrame(pnl_data)
+#     if pnl_data:
+#         df = pd.DataFrame(pnl_data)
         
-        if not df.empty:
-            # Daily PNL Bar Chart
+#         if not df.empty:
+#             # Daily PNL Bar Chart
+#             daily_fig = px.bar(
+#                 df, x="Date", y="PNL", 
+#                 title="Daily Performance", 
+#                 color="PNL", 
+#                 color_continuous_scale="RdYlGn",
+#                 labels={"PNL": "Profit/Loss (USDT)", "Date": "Date"}
+#             )
+#             st.plotly_chart(daily_fig, use_container_width=True)
+            
+#             # Cumulative PNL Line Chart
+#             df['Cumulative PNL'] = df['PNL'].cumsum()
+#             cumulative_fig = px.line(
+#                 df, x="Date", y="Cumulative PNL", 
+#                 title="Cumulative Performance",
+#                 labels={"Cumulative PNL": "Total Profit/Loss (USDT)", "Date": "Date"}, 
+#                 markers=True
+#             )
+#             st.plotly_chart(cumulative_fig, use_container_width=True)
+#         else:
+#             st.warning("No PNL data available.")
+#     else:
+#         st.warning("No PNL data available.")
+def analytics():
+    """Advanced Trading Analytics with Enhanced Visualizations"""
+    st.subheader("Trading Analytics")
+    
+    # Fetch PNL and Trade Data
+    pnl_data = fetch_data("pnl_analytics")
+    trade_history_data = fetch_data("trade_history")
+    
+    if pnl_data and trade_history_data:
+        pnl_df = pd.DataFrame(pnl_data)
+        trades_df = pd.DataFrame(trade_history_data)
+        
+        if not pnl_df.empty:
+            # Advanced Daily PNL Bar Chart
             daily_fig = px.bar(
-                df, x="Date", y="PNL", 
-                title="Daily Performance", 
-                color="PNL", 
-                color_continuous_scale="RdYlGn",
-                labels={"PNL": "Profit/Loss (USDT)", "Date": "Date"}
+                pnl_df, 
+                x="Date", 
+                y="PNL", 
+                title="Daily Performance Analysis",
+                labels={
+                    "Date": "Trading Date", 
+                    "PNL": "Daily Profit/Loss (USDT)"
+                },
+                color="PNL",
+                color_continuous_scale=px.colors.sequential.RdYlGn,
+                color_continuous_midpoint=0
+            )
+            daily_fig.update_layout(
+                xaxis_title="Trading Date",
+                yaxis_title="Daily Profit/Loss (USDT)",
+                coloraxis_colorbar_title="PNL"
             )
             st.plotly_chart(daily_fig, use_container_width=True)
             
-            # Cumulative PNL Line Chart
-            df['Cumulative PNL'] = df['PNL'].cumsum()
-            cumulative_fig = px.line(
-                df, x="Date", y="Cumulative PNL", 
-                title="Cumulative Performance",
-                labels={"Cumulative PNL": "Total Profit/Loss (USDT)", "Date": "Date"}, 
-                markers=True
+            # Enhanced Cumulative PNL Line Chart with Percentage
+            pnl_df['Cumulative PNL'] = pnl_df['PNL'].cumsum()
+            pnl_df['Cumulative PNL %'] = (pnl_df['Cumulative PNL'] / pnl_df['PNL'].abs().max()) * 100
+            
+            cumulative_fig = go.Figure()
+            
+            # Primary Y-Axis: Cumulative PNL in USDT
+            cumulative_fig.add_trace(go.Scatter(
+                x=pnl_df['Date'], 
+                y=pnl_df['Cumulative PNL'],
+                mode='lines+markers',
+                name='Total Profit/Loss (USDT)',
+                line=dict(color='blue', width=3),
+                marker=dict(size=8)
+            ))
+            
+            # Secondary Y-Axis: Cumulative PNL Percentage
+            cumulative_fig.add_trace(go.Scatter(
+                x=pnl_df['Date'], 
+                y=pnl_df['Cumulative PNL %'],
+                mode='lines',
+                name='Cumulative PNL (%)',
+                line=dict(color='green', width=2, dash='dot'),
+                yaxis='y2'
+            ))
+            
+            cumulative_fig.update_layout(
+                title='Cumulative Trading Performance',
+                xaxis_title='Date',
+                yaxis_title='Total Profit/Loss (USDT)',
+                yaxis2=dict(
+                    title='Cumulative PNL (%)',
+                    overlaying='y',
+                    side='right',
+                    showgrid=False
+                ),
+                legend_title_text='Performance Metrics'
             )
             st.plotly_chart(cumulative_fig, use_container_width=True)
-        else:
-            st.warning("No PNL data available.")
+        
+        # Trade Size and Symbol Distribution
+        if not trades_df.empty:
+            # Scatter Plot: Trade Price vs PNL
+            trade_scatter = px.scatter(
+                trades_df, 
+                x='Trade Price', 
+                y='Trade PNL', 
+                color='Symbol',
+                title='Trade Price vs Profit/Loss by Symbol',
+                labels={
+                    'Trade Price': 'Trade Execution Price', 
+                    'Trade PNL': 'Trade Profit/Loss (USDT)'
+                },
+                hover_data=['Symbol', 'Trade Time']
+            )
+            st.plotly_chart(trade_scatter, use_container_width=True)
+            
+            # Pie Chart: Trade Size Distribution
+            trade_size_fig = px.pie(
+                trades_df, 
+                names='Symbol', 
+                values='Trade Amount',
+                title='Trade Size Distribution by Crypto Symbol',
+                hole=0.3
+            )
+            st.plotly_chart(trade_size_fig, use_container_width=True)
     else:
-        st.warning("No PNL data available.")
+        st.warning("Insufficient data for analytics visualization.")
 
 
 
