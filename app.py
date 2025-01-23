@@ -194,6 +194,7 @@ def trade_history():
 #             st.warning("No PNL data available.")
 #     else:
 #         st.warning("No PNL data available.")
+
 def analytics():
     """Advanced Trading Analytics with Enhanced Visualizations"""
     st.subheader("Trading Analytics")
@@ -218,7 +219,7 @@ def analytics():
                     "PNL": "Daily Profit/Loss (USDT)"
                 },
                 color="PNL",
-                color_continuous_scale=px.colors.sequential.YlGnBu,  # Changed color scale
+                color_continuous_scale=px.colors.sequential.YlGnBu,
                 color_continuous_midpoint=0
             )
             daily_fig.update_layout(
@@ -270,18 +271,18 @@ def analytics():
         
         # Trade Size and Symbol Distribution
         if not trades_df.empty:
-            # Scatter Plot: Trade Price vs PNL
+            # Scatter Plot: Price vs PNL
             trade_scatter = px.scatter(
                 trades_df, 
-                x='Trade Price', 
-                y='Trade PNL', 
+                x='Price',  # Changed from 'Trade Price'
+                y='PNL',    # Changed from 'Trade PNL'
                 color='Symbol',
                 title='Trade Price vs Profit/Loss by Symbol',
                 labels={
-                    'Trade Price': 'Trade Execution Price', 
-                    'Trade PNL': 'Trade Profit/Loss (USDT)'
+                    'Price': 'Trade Execution Price', 
+                    'PNL': 'Trade Profit/Loss (USDT)'
                 },
-                hover_data=['Symbol', 'Trade Time']
+                hover_data=['Symbol', 'Time']  # Changed from 'Trade Time'
             )
             st.plotly_chart(trade_scatter, use_container_width=True)
             
@@ -289,7 +290,7 @@ def analytics():
             trade_size_fig = px.pie(
                 trades_df, 
                 names='Symbol', 
-                values='Trade Amount',
+                values='Quantity',  # Changed from 'Trade Amount'
                 title='Trade Size Distribution by Crypto Symbol',
                 hole=0.3
             )
