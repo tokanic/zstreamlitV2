@@ -17,7 +17,7 @@ def format_timestamp(timestamp):
     """Convert timestamp to Indian Standard Time"""
     try:
         # Assume timestamp is in milliseconds
-        dt = datetime.fromtimestamp(timestamp/1000, tz=pytz.UTC)
+        dt = datetime.fromtimestamp(timestamp / 1000, tz=pytz.UTC)
         indian_tz = pytz.timezone('Asia/Kolkata')
         indian_time = dt.astimezone(indian_tz)
         return indian_time.strftime('%d %b %Y %I:%M:%S %p')
@@ -162,38 +162,50 @@ def trade_history():
     else:
         st.warning("No trade history available.")
 
-# def analytics():
-#     """Advanced Trading Analytics"""
-#     st.subheader("Trading Analytics")
-#     pnl_data = fetch_data("pnl_analytics")
+def closed_positions():
+    """Display Closed Positions"""
+    st.subheader("Closed Positions")
+    closed_positions_data = fetch_data("closed_positions")
     
-#     if pnl_data:
-#         df = pd.DataFrame(pnl_data)
+    if closed_positions_data:
+        df = pd.DataFrame(closed_positions_data)
+        df['Entry Time'] = df['Entry Time'].apply(format_timestamp)
+        df['Exit Time'] = df['Exit Time'].apply(format_timestamp)
+        df['PNL'] = df['PNL'].apply(format_pnl)
         
-#         if not df.empty:
-#             # Daily PNL Bar Chart
-#             daily_fig = px.bar(
-#                 df, x="Date", y="PNL", 
-#                 title="Daily Performance", 
-#                 color="PNL", 
-#                 color_continuous_scale="RdYlGn",
-#                 labels={"PNL": "Profit/Loss (USDT)", "Date": "Date"}
-#             )
-#             st.plotly_chart(daily_fig, use_container_width=True)
-            
-#             # Cumulative PNL Line Chart
-#             df['Cumulative PNL'] = df['PNL'].cumsum()
-#             cumulative_fig = px.line(
-#                 df, x="Date", y="Cumulative PNL", 
-#                 title="Cumulative Performance",
-#                 labels={"Cumulative PNL": "Total Profit/Loss (USDT)", "Date": "Date"}, 
-#                 markers=True
-#             )
-#             st.plotly_chart(cumulative_fig, use_container_width=True)
-#         else:
-#             st.warning("No PNL data available.")
-#     else:
-#         st.warning("No PNL data available.")
+        st.dataframe(df, use_container_width=True)
+        
+        # Visualization: PNL Distribution
+        fig = px.histogram(df, x='PNL', title='Closed Positions PNL Distribution')
+        st.plotly_chart(fig, use_container_width=True)
+        
+        # Visualization: Duration vs PNL
+        df['Duration'] = pd.to_datetime(df['Exit Time']) - pd.to_datetime(df['Entry Time'])
+        fig = px.scatter(df, x='Duration', y='PNL', color='Symbol', title='Duration vs PNL')
+        st.plotly_chart(fig, use_container_width=True)
+    else:
+        st.warning("No closed positions found.")
+
+def order_history():
+    """Display Order History"""
+    st.subheader("Order History")
+    order_history_data = fetch_data("order_history")
+    
+    if order_history_data:
+        df = pd.DataFrame(order_history_data)
+        df['Order Time'] = df['Order Time'].apply(format_timestamp)
+        
+        st.dataframe(df, use_container_width=True)
+        
+        # Visualization: Order Type Distribution
+        fig = px.pie(df, names='Order Type', title='Order Type Distribution')
+        st.plotly_chart(fig, use_container_width=True)
+        
+        # Visualization: Order Status Distribution
+        fig = px.pie(df, names='Status', title='Order Status Distribution')
+        st.plotly_chart(fig, use_container_width=True)
+    else:
+        st.warning("No order history found.")
 
 def analytics():
     """Advanced Trading Analytics with Enhanced Visualizations"""
@@ -274,15 +286,15 @@ def analytics():
             # Scatter Plot: Price vs PNL
             trade_scatter = px.scatter(
                 trades_df, 
-                x='Price',  # Changed from 'Trade Price'
-                y='PNL',    # Changed from 'Trade PNL'
+                x='Price', 
+                y='PNL', 
                 color='Symbol',
                 title='Trade Price vs Profit/Loss by Symbol',
                 labels={
                     'Price': 'Trade Execution Price', 
                     'PNL': 'Trade Profit/Loss (USDT)'
                 },
-                hover_data=['Symbol', 'Time']  # Changed from 'Trade Time'
+                hover_data=['Symbol', 'Time']
             )
             st.plotly_chart(trade_scatter, use_container_width=True)
             
@@ -290,14 +302,13 @@ def analytics():
             trade_size_fig = px.pie(
                 trades_df, 
                 names='Symbol', 
-                values='Quantity',  # Changed from 'Trade Amount'
+                values='Quantity', 
                 title='Trade Size Distribution by Crypto Symbol',
                 hole=0.3
             )
             st.plotly_chart(trade_size_fig, use_container_width=True)
     else:
         st.warning("Insufficient data for analytics visualization.")
-
 
 # Main Dashboard
 def main():
@@ -311,6 +322,8 @@ def main():
         "Positions", 
         "Open Orders", 
         "Trade History", 
+        "Closed Positions",
+        "Order History",
         "Analytics"
     ]
     choice = st.sidebar.radio("Navigation", menu)
@@ -324,6 +337,10 @@ def main():
         open_orders()
     elif choice == "Trade History":
         trade_history()
+    elif choice == "Closed Positions":
+        closed_positions()
+    elif choice == "Order History":
+        order_history()
     elif choice == "Analytics":
         analytics()
     
