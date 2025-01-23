@@ -162,93 +162,40 @@ def trade_history():
     else:
         st.warning("No trade history available.")
 
-# def analytics():
-#     """Advanced Trading Analytics"""
-#     st.subheader("Trading Analytics")
-#     pnl_data = fetch_data("pnl_analytics")
-    
-#     if pnl_data:
-#         df = pd.DataFrame(pnl_data)
-        
-#         if not df.empty:
-#             # Daily PNL Bar Chart
-#             daily_fig = px.bar(
-#                 df, x="Date", y="PNL", 
-#                 title="Daily Performance", 
-#                 color="PNL", 
-#                 color_continuous_scale="RdYlGn",
-#                 labels={"PNL": "Profit/Loss (USDT)", "Date": "Date"}
-#             )
-#             st.plotly_chart(daily_fig, use_container_width=True)
-            
-#             # Cumulative PNL Line Chart
-#             df['Cumulative PNL'] = df['PNL'].cumsum()
-#             cumulative_fig = px.line(
-#                 df, x="Date", y="Cumulative PNL", 
-#                 title="Cumulative Performance",
-#                 labels={"Cumulative PNL": "Total Profit/Loss (USDT)", "Date": "Date"}, 
-#                 markers=True
-#             )
-#             st.plotly_chart(cumulative_fig, use_container_width=True)
-#         else:
-#             st.warning("No PNL data available.")
-#     else:
-#         st.warning("No PNL data available.")
-
-
 def analytics():
+    """Advanced Trading Analytics"""
     st.subheader("Trading Analytics")
     pnl_data = fetch_data("pnl_analytics")
     
     if pnl_data:
         df = pd.DataFrame(pnl_data)
-        df['Date'] = pd.to_datetime(df['Date'])
         
         if not df.empty:
             # Daily PNL Bar Chart
-            fig1 = px.bar(
-                df, x="Date", y="PNL",
-                title="Daily Profit/Loss", 
-                color="PNL",
+            daily_fig = px.bar(
+                df, x="Date", y="PNL", 
+                title="Daily Performance", 
+                color="PNL", 
                 color_continuous_scale="RdYlGn",
                 labels={"PNL": "Profit/Loss (USDT)", "Date": "Date"}
             )
-            st.plotly_chart(fig1, use_container_width=True)
+            st.plotly_chart(daily_fig, use_container_width=True)
             
             # Cumulative PNL Line Chart
             df['Cumulative PNL'] = df['PNL'].cumsum()
-            fig2 = go.Figure()
-            fig2.add_trace(go.Scatter(
-                x=df['Date'], y=df['Cumulative PNL'],
-                mode='lines+markers',
-                name='Cumulative Profit/Loss'
-            ))
-            fig2.update_layout(
+            cumulative_fig = px.line(
+                df, x="Date", y="Cumulative PNL", 
                 title="Cumulative Performance",
-                xaxis_title="Date",
-                yaxis_title="Total Profit/Loss (USDT)"
+                labels={"Cumulative PNL": "Total Profit/Loss (USDT)", "Date": "Date"}, 
+                markers=True
             )
-            st.plotly_chart(fig2, use_container_width=True)
-            
-            # Recent Trade History Bar Chart
-            trade_history_data = fetch_data("trade_history")
-            if trade_history_data:
-                trade_df = pd.DataFrame(trade_history_data)
-                trade_df['Trade Time'] = trade_df['Trade Time'].apply(format_timestamp)
-                trade_df['Trade PNL'] = trade_df['Trade PNL'].apply(format_pnl)
-                
-                fig3 = px.bar(
-                    trade_df.iloc[-10:], # Last 10 trades
-                    x="Trade Time",
-                    y="Trade PNL",
-                    title="Recent Trade Profit/Loss",
-                    labels={"Trade PNL": "Trade Profit/Loss", "Trade Time": "Time"}
-                )
-                st.plotly_chart(fig3, use_container_width=True)
+            st.plotly_chart(cumulative_fig, use_container_width=True)
         else:
             st.warning("No PNL data available.")
     else:
         st.warning("No PNL data available.")
+
+
 
 # Main Dashboard
 def main():
