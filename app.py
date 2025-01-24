@@ -94,6 +94,60 @@ def open_orders():
         else:
             st.warning("No open orders found.")
 
+def position_history():
+    """Display Position History"""
+    st.subheader("Position History")
+    position_history_data = fetch_data("positions")  # Adjust to fetch the correct endpoint for position history
+
+    if position_history_data:
+        df = pd.DataFrame(position_history_data)
+        if not df.empty:
+            # Sort by Time, latest first
+            df.sort_values(by='Time', ascending=False, inplace=True)
+
+            # Convert timestamps to human-readable format
+            if 'Entry Time' in df.columns:
+                df['Entry Time'] = df['Entry Time'].apply(format_timestamp)
+            if 'Exit Time' in df.columns:
+                df['Exit Time'] = df['Exit Time'].apply(format_timestamp)
+
+            # Format PNL with color coding
+            if 'PNL' in df.columns:
+                df['PNL'] = df['PNL'].apply(format_pnl)
+
+            # Display DataFrame
+            st.dataframe(df, use_container_width=True, height=500)
+
+            # PNL Distribution Chart
+            if 'PNL' in df.columns:
+                fig = px.histogram(
+                    df,
+                    x='PNL',
+                    title='Position PNL Distribution',
+                    labels={'PNL': 'Profit/Loss (USDT)'},
+                    color_discrete_sequence=['#EF553B']
+                )
+                st.plotly_chart(fig, use_container_width=True)
+
+            # Entry vs Exit Price Scatter Plot
+            if 'Entry Price' in df.columns and 'Exit Price' in df.columns:
+                scatter_fig = px.scatter(
+                    df,
+                    x='Entry Price',
+                    y='Exit Price',
+                    color='Symbol',
+                    size='PNL',
+                    hover_data=['Entry Time', 'Exit Time'],
+                    title='Entry vs Exit Price by Symbol',
+                    labels={'Entry Price': 'Entry Price (USDT)', 'Exit Price': 'Exit Price (USDT)'}
+                )
+                st.plotly_chart(scatter_fig, use_container_width=True)
+        else:
+            st.warning("No position history available.")
+    else:
+        st.warning("Failed to fetch position history.")
+
+
 def trade_history():
     """Comprehensive Trade History"""
     st.subheader("Trade History")
@@ -347,8 +401,10 @@ def analytics():
 def main():
     st.sidebar.image("https://upload.wikimedia.org/wikipedia/commons/4/4b/Binance_logo.png", width=200)
     st.sidebar.title("Binance Trading Dashboard")
-    menu = ["Account Summary", "Positions", "Open Orders", "Trade History", "Closed Positions", "Order History", "Analytics"]
-    choice = st.sidebar.radio("Navigation", menu)
+menu = ["Account Summary", "Positions", "Open Orders", "Trade History", "Position History", "Order History", "Analytics"]
+choice = st.sidebar.radio("Navigation", menu)
+
+
     if choice == "Account Summary":
         account_summary()
     elif choice == "Positions":
@@ -357,8 +413,8 @@ def main():
         open_orders()
     elif choice == "Trade History":
         trade_history()
-    elif choice == "Closed Positions":
-        closed_positions()
+    elif choice == "Position History":
+    position_history()
     elif choice == "Order History":
         order_history()
     elif choice == "Analytics":
