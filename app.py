@@ -98,16 +98,38 @@ def trade_history():
     """Comprehensive Trade History"""
     st.subheader("Trade History")
     trade_history_data = fetch_data("trade_history")
-    
+
     if trade_history_data:
         df = pd.DataFrame(trade_history_data)
         if not df.empty:
-            st.dataframe(df, use_container_width=True)
-            # PNL Distribution
-            fig = px.histogram(df, x='PNL', title='PNL Distribution')
-            st.plotly_chart(fig, use_container_width=True)
+            # Convert timestamp to human-readable format
+            if 'Time' in df.columns:
+                df['Time'] = df['Time'].apply(format_timestamp)
+
+            # Sort by time, latest first
+            df.sort_values(by='Time', ascending=False, inplace=True)
+
+            # Format PNL with color coding
+            if 'PNL' in df.columns:
+                df['PNL'] = df['PNL'].apply(format_pnl)
+
+            # Display DataFrame
+            st.dataframe(df, use_container_width=True, height=500)
+
+            # PNL Distribution Visualization
+            if 'PNL' in df.columns:
+                fig = px.histogram(
+                    df, 
+                    x='PNL', 
+                    title='PNL Distribution', 
+                    labels={'PNL': 'Profit/Loss (USDT)'},
+                    color_discrete_sequence=['#636EFA']
+                )
+                st.plotly_chart(fig, use_container_width=True)
         else:
             st.warning("No trade history available.")
+    else:
+        st.warning("Failed to fetch trade history.")
 
 def closed_positions():
     """Display Closed Positions"""
