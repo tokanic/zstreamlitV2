@@ -135,16 +135,54 @@ def closed_positions():
     """Display Closed Positions"""
     st.subheader("Closed Positions")
     closed_positions_data = fetch_data("closed_positions")
-    
+
     if closed_positions_data:
         df = pd.DataFrame(closed_positions_data)
         if not df.empty:
-            st.dataframe(df, use_container_width=True)
+            # Sort by Exit Time, latest first
+            df.sort_values(by='Exit Time', ascending=False, inplace=True)
+
+            # Convert timestamps to human-readable format
+            if 'Entry Time' in df.columns:
+                df['Entry Time'] = df['Entry Time'].apply(format_timestamp)
+            if 'Exit Time' in df.columns:
+                df['Exit Time'] = df['Exit Time'].apply(format_timestamp)
+
+            # Format PNL with color coding
+            if 'PNL' in df.columns:
+                df['PNL'] = df['PNL'].apply(format_pnl)
+
+            # Display DataFrame
+            st.dataframe(df, use_container_width=True, height=500)
+
             # PNL Distribution Chart
-            fig = px.histogram(df, x='PNL', title='Closed Positions PNL Distribution')
-            st.plotly_chart(fig, use_container_width=True)
+            if 'PNL' in df.columns:
+                fig = px.histogram(
+                    df, 
+                    x='PNL', 
+                    title='Closed Positions PNL Distribution', 
+                    labels={'PNL': 'Profit/Loss (USDT)'},
+                    color_discrete_sequence=['#EF553B']
+                )
+                st.plotly_chart(fig, use_container_width=True)
+
+            # Entry vs Exit Price Scatter Plot
+            if 'Entry Price' in df.columns and 'Exit Price' in df.columns:
+                scatter_fig = px.scatter(
+                    df,
+                    x='Entry Price',
+                    y='Exit Price',
+                    color='Symbol',
+                    size='PNL',
+                    hover_data=['Entry Time', 'Exit Time'],
+                    title='Entry vs Exit Price by Symbol',
+                    labels={'Entry Price': 'Entry Price (USDT)', 'Exit Price': 'Exit Price (USDT)'}
+                )
+                st.plotly_chart(scatter_fig, use_container_width=True)
         else:
             st.warning("No closed positions available.")
+    else:
+        st.warning("Failed to fetch closed positions.")
 
 def order_history():
     """Display Order History"""
