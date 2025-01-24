@@ -188,13 +188,45 @@ def order_history():
     """Display Order History"""
     st.subheader("Order History")
     order_history_data = fetch_data("order_history")
-    
+
     if order_history_data:
         df = pd.DataFrame(order_history_data)
         if not df.empty:
-            st.dataframe(df, use_container_width=True)
+            # Sort by Order Time, latest first
+            df.sort_values(by='Order Time', ascending=False, inplace=True)
+
+            # Convert timestamps to human-readable format
+            if 'Order Time' in df.columns:
+                df['Order Time'] = df['Order Time'].apply(format_timestamp)
+
+            # Display DataFrame
+            st.dataframe(df, use_container_width=True, height=500)
+
+            # Order Status Distribution Pie Chart
+            if 'Status' in df.columns:
+                status_fig = px.pie(
+                    df,
+                    names='Status',
+                    title='Order Status Distribution',
+                    color_discrete_sequence=px.colors.qualitative.Set3
+                )
+                st.plotly_chart(status_fig, use_container_width=True)
+
+            # Order Type Distribution Bar Chart
+            if 'Type' in df.columns:
+                type_fig = px.bar(
+                    df,
+                    x='Type',
+                    title='Order Type Distribution',
+                    labels={'Type': 'Order Type', 'count': 'Count'},
+                    color_discrete_sequence=['#636EFA']
+                )
+                st.plotly_chart(type_fig, use_container_width=True)
         else:
             st.warning("No order history found.")
+    else:
+        st.warning("Failed to fetch order history.")
+
 
 def analytics():
     """Trading Analytics"""
