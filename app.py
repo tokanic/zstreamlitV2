@@ -299,6 +299,47 @@ def analytics():
                 profit_line_fig.update_layout(xaxis_title='Crypto Symbol', yaxis_title='Profit/Loss (USDT)')
                 st.plotly_chart(profit_line_fig, use_container_width=True)
 
+     # Scatter Plot: PNL by Symbol
+            if 'Symbol' in pnl_df.columns:
+                pnl_df['Size'] = pnl_df['PNL'].apply(lambda x: max(0.1, abs(x)))  # Ensure size > 0 for visualization
+                scatter_fig = px.scatter(
+                    pnl_df,
+                    x='Date',
+                    y='PNL',
+                    color='Symbol',
+                    size='Size',
+                    title='PNL by Symbol Over Time',
+                    labels={'Date': 'Date', 'PNL': 'Profit/Loss (USDT)', 'Symbol': 'Crypto Symbol'},
+                    hover_data=['PNL']
+                )
+                st.plotly_chart(scatter_fig, use_container_width=True)
+
+    if positions_data:
+        positions_df = pd.DataFrame(positions_data)
+        if not positions_df.empty:
+            # Pie Chart: Current Holdings
+            pie_fig = px.pie(
+                positions_df,
+                names='Symbol',
+                values='Size',
+                title='Current Holdings Distribution',
+                color_discrete_sequence=px.colors.qualitative.Set3
+            )
+            st.plotly_chart(pie_fig, use_container_width=True)
+
+            # Line Chart: Profit Over Time
+            if 'PNL' in positions_df.columns and 'Symbol' in positions_df.columns:
+                profit_line_fig = px.line(
+                    positions_df,
+                    x='Symbol',
+                    y='PNL',
+                    title='Profit by Symbol',
+                    labels={'Symbol': 'Crypto Symbol', 'PNL': 'Profit/Loss (USDT)'},
+                    markers=True,
+                    line_shape='spline'
+                )
+                st.plotly_chart(profit_line_fig, use_container_width=True)
+
     if not pnl_data and not positions_data:
         st.error("Failed to fetch analytics data. Please check the backend.")
         
