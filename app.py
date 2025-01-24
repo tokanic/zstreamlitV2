@@ -102,16 +102,15 @@ def position_history():
     if position_history_data:
         df = pd.DataFrame(position_history_data)
         if not df.empty:
-            # Sort by Time, latest first
-            df.sort_values(by='Time', ascending=False, inplace=True)
+            # Check if 'Time' column exists
+            if 'Time' in df.columns:
+                # Convert timestamp to human-readable format
+                df['Time'] = df['Time'].apply(format_timestamp)
 
-            # Convert timestamps to human-readable format
-            if 'Entry Time' in df.columns:
-                df['Entry Time'] = df['Entry Time'].apply(format_timestamp)
-            if 'Exit Time' in df.columns:
-                df['Exit Time'] = df['Exit Time'].apply(format_timestamp)
+                # Sort by time, latest first
+                df.sort_values(by='Time', ascending=False, inplace=True)
 
-            # Format PNL with color coding
+            # Format PNL with color coding if it exists
             if 'PNL' in df.columns:
                 df['PNL'] = df['PNL'].apply(format_pnl)
 
@@ -137,7 +136,7 @@ def position_history():
                     y='Exit Price',
                     color='Symbol',
                     size='PNL',
-                    hover_data=['Entry Time', 'Exit Time'],
+                    hover_data=['Entry Time', 'Exit Time'] if 'Entry Time' in df.columns and 'Exit Time' in df.columns else None,
                     title='Entry vs Exit Price by Symbol',
                     labels={'Entry Price': 'Entry Price (USDT)', 'Exit Price': 'Exit Price (USDT)'}
                 )
@@ -147,6 +146,76 @@ def position_history():
     else:
         st.warning("Failed to fetch position history.")
 
+def analytics():
+    """Trading Analytics"""
+    st.subheader("Trading Analytics")
+    pnl_data = fetch_data("pnl_analytics")
+    positions_data = fetch_data("positions")
+
+    if pnl_data:
+        pnl_df = pd.DataFrame(pnl_data)
+        if not pnl_df.empty:
+            # Sort by Date, latest first
+            pnl_df['Date'] = pd.to_datetime(pnl_df['Date'])  # Ensure correct datetime format
+            pnl_df.sort_values(by='Date', ascending=False, inplace=True)
+
+            # Daily PNL Chart
+            daily_fig = px.bar(
+                pnl_df,
+                x='Date',
+                y='PNL',
+                title='Daily Profit/Loss (PNL)',
+                labels={'Date': 'Date', 'PNL': 'Profit/Loss (USDT)'},
+                color='PNL',
+                color_continuous_scale=px.colors.sequential.Viridis
+            )
+            daily_fig.update_layout(xaxis_title='Date', yaxis_title='Profit/Loss (USDT)', xaxis=dict(tickformat='%b %d'))
+            st.plotly_chart(daily_fig, use_container_width=True)
+
+            # Cumulative PNL Chart
+            pnl_df['Cumulative PNL'] = pnl_df['PNL'].cumsum()
+            cumulative_fig = px.line(
+                pnl_df,
+                x='Date',
+                y='Cumulative PNL',
+                title='Cumulative Profit/Loss Over Time',
+                labels={'Date': 'Date', 'Cumulative PNL': 'Cumulative Profit/Loss (USDT)'},
+                line_shape='linear',
+                markers=True
+            )
+            cumulative_fig.update_layout(xaxis_title='Date', yaxis_title='Cumulative Profit/Loss (USDT)', xaxis=dict(tickformat='%b %d'))
+            st.plotly_chart(cumulative_fig, use_container_width=True)
+
+    if positions_data:
+        positions_df = pd.DataFrame(positions_data)
+        if not positions_df.empty:
+            # Pie Chart: Current Holdings
+            pie_fig = px.pie(
+                positions_df,
+                names='Symbol',
+                values='Size',
+                title='Current Holdings Distribution',
+                color_discrete_sequence=px.colors.qualitative.Set3
+            )
+            st.plotly_chart(pie_fig, use_container_width=True)
+
+            # Line Chart: Symbol-Wise Profit
+            if 'PNL' in positions_df.columns and 'Symbol' in positions_df.columns:
+                positions_df['PNL'] = positions_df['PNL'].astype(float)
+                profit_line_fig = px.line(
+                    positions_df,
+                    x='Symbol',
+                    y='PNL',
+                    title='Profit by Symbol',
+                    labels={'Symbol': 'Crypto Symbol', 'PNL': 'Profit/Loss (USDT)'},
+                    markers=True,
+                    line_shape='linear'
+                )
+                profit_line_fig.update_layout(xaxis_title='Crypto Symbol', yaxis_title='Profit/Loss (USDT)')
+                st.plotly_chart(profit_line_fig, use_container_width=True)
+
+    if not pnl_data and not positions_data:
+        st.error("Failed to fetch analytics data. Please check the backend.")
 
 def trade_history():
     """Comprehensive Trade History"""
@@ -285,117 +354,117 @@ def order_history():
     except Exception as e:
         st.error(f"An unexpected error occurred: {e}")
 
-def analytics():
-    """Trading Analytics"""
-    st.subheader("Trading Analytics")
-    pnl_data = fetch_data("pnl_analytics")
-    positions_data = fetch_data("positions")
+# def analytics():
+#     """Trading Analytics"""
+#     st.subheader("Trading Analytics")
+#     pnl_data = fetch_data("pnl_analytics")
+#     positions_data = fetch_data("positions")
 
-    if pnl_data:
-        pnl_df = pd.DataFrame(pnl_data)
-        if not pnl_df.empty:
-            # Sort by Date, latest first
-            pnl_df['Date'] = pd.to_datetime(pnl_df['Date'])  # Ensure correct datetime format
-            pnl_df.sort_values(by='Date', ascending=False, inplace=True)
+#     if pnl_data:
+#         pnl_df = pd.DataFrame(pnl_data)
+#         if not pnl_df.empty:
+#             # Sort by Date, latest first
+#             pnl_df['Date'] = pd.to_datetime(pnl_df['Date'])  # Ensure correct datetime format
+#             pnl_df.sort_values(by='Date', ascending=False, inplace=True)
 
-            # Daily PNL Chart
-            daily_fig = px.bar(
-                pnl_df,
-                x='Date',
-                y='PNL',
-                title='Daily Profit/Loss (PNL)',
-                labels={'Date': 'Date', 'PNL': 'Profit/Loss (USDT)'},
-                color='PNL',
-                color_continuous_scale=px.colors.sequential.Viridis
-            )
-            daily_fig.update_layout(xaxis_title='Date', yaxis_title='Profit/Loss (USDT)', xaxis=dict(tickformat='%b %d'))
-            st.plotly_chart(daily_fig, use_container_width=True)
+#             # Daily PNL Chart
+#             daily_fig = px.bar(
+#                 pnl_df,
+#                 x='Date',
+#                 y='PNL',
+#                 title='Daily Profit/Loss (PNL)',
+#                 labels={'Date': 'Date', 'PNL': 'Profit/Loss (USDT)'},
+#                 color='PNL',
+#                 color_continuous_scale=px.colors.sequential.Viridis
+#             )
+#             daily_fig.update_layout(xaxis_title='Date', yaxis_title='Profit/Loss (USDT)', xaxis=dict(tickformat='%b %d'))
+#             st.plotly_chart(daily_fig, use_container_width=True)
 
-            # Cumulative PNL Chart
-            pnl_df['Cumulative PNL'] = pnl_df['PNL'].cumsum()
-            cumulative_fig = px.line(
-                pnl_df,
-                x='Date',
-                y='Cumulative PNL',
-                title='Cumulative Profit/Loss Over Time',
-                labels={'Date': 'Date', 'Cumulative PNL': 'Cumulative Profit/Loss (USDT)'},
-                line_shape='linear',
-                markers=True
-            )
-            cumulative_fig.update_layout(xaxis_title='Date', yaxis_title='Cumulative Profit/Loss (USDT)', xaxis=dict(tickformat='%b %d'))
-            st.plotly_chart(cumulative_fig, use_container_width=True)
+#             # Cumulative PNL Chart
+#             pnl_df['Cumulative PNL'] = pnl_df['PNL'].cumsum()
+#             cumulative_fig = px.line(
+#                 pnl_df,
+#                 x='Date',
+#                 y='Cumulative PNL',
+#                 title='Cumulative Profit/Loss Over Time',
+#                 labels={'Date': 'Date', 'Cumulative PNL': 'Cumulative Profit/Loss (USDT)'},
+#                 line_shape='linear',
+#                 markers=True
+#             )
+#             cumulative_fig.update_layout(xaxis_title='Date', yaxis_title='Cumulative Profit/Loss (USDT)', xaxis=dict(tickformat='%b %d'))
+#             st.plotly_chart(cumulative_fig, use_container_width=True)
 
-    if positions_data:
-        positions_df = pd.DataFrame(positions_data)
-        if not positions_df.empty:
-            # Pie Chart: Current Holdings
-            pie_fig = px.pie(
-                positions_df,
-                names='Symbol',
-                values='Size',
-                title='Current Holdings Distribution',
-                color_discrete_sequence=px.colors.qualitative.Set3
-            )
-            st.plotly_chart(pie_fig, use_container_width=True)
+#     if positions_data:
+#         positions_df = pd.DataFrame(positions_data)
+#         if not positions_df.empty:
+#             # Pie Chart: Current Holdings
+#             pie_fig = px.pie(
+#                 positions_df,
+#                 names='Symbol',
+#                 values='Size',
+#                 title='Current Holdings Distribution',
+#                 color_discrete_sequence=px.colors.qualitative.Set3
+#             )
+#             st.plotly_chart(pie_fig, use_container_width=True)
 
-            # Line Chart: Symbol-Wise Profit
-            if 'PNL' in positions_df.columns and 'Symbol' in positions_df.columns:
-                positions_df['PNL'] = positions_df['PNL'].astype(float)
-                profit_line_fig = px.line(
-                    positions_df,
-                    x='Symbol',
-                    y='PNL',
-                    title='Profit by Symbol',
-                    labels={'Symbol': 'Crypto Symbol', 'PNL': 'Profit/Loss (USDT)'},
-                    markers=True,
-                    line_shape='linear'
-                )
-                profit_line_fig.update_layout(xaxis_title='Crypto Symbol', yaxis_title='Profit/Loss (USDT)')
-                st.plotly_chart(profit_line_fig, use_container_width=True)
+#             # Line Chart: Symbol-Wise Profit
+#             if 'PNL' in positions_df.columns and 'Symbol' in positions_df.columns:
+#                 positions_df['PNL'] = positions_df['PNL'].astype(float)
+#                 profit_line_fig = px.line(
+#                     positions_df,
+#                     x='Symbol',
+#                     y='PNL',
+#                     title='Profit by Symbol',
+#                     labels={'Symbol': 'Crypto Symbol', 'PNL': 'Profit/Loss (USDT)'},
+#                     markers=True,
+#                     line_shape='linear'
+#                 )
+#                 profit_line_fig.update_layout(xaxis_title='Crypto Symbol', yaxis_title='Profit/Loss (USDT)')
+#                 st.plotly_chart(profit_line_fig, use_container_width=True)
 
-     # Scatter Plot: PNL by Symbol
-            if 'Symbol' in pnl_df.columns:
-                pnl_df['Size'] = pnl_df['PNL'].apply(lambda x: max(0.1, abs(x)))  # Ensure size > 0 for visualization
-                scatter_fig = px.scatter(
-                    pnl_df,
-                    x='Date',
-                    y='PNL',
-                    color='Symbol',
-                    size='Size',
-                    title='PNL by Symbol Over Time',
-                    labels={'Date': 'Date', 'PNL': 'Profit/Loss (USDT)', 'Symbol': 'Crypto Symbol'},
-                    hover_data=['PNL']
-                )
-                st.plotly_chart(scatter_fig, use_container_width=True)
+#      # Scatter Plot: PNL by Symbol
+#             if 'Symbol' in pnl_df.columns:
+#                 pnl_df['Size'] = pnl_df['PNL'].apply(lambda x: max(0.1, abs(x)))  # Ensure size > 0 for visualization
+#                 scatter_fig = px.scatter(
+#                     pnl_df,
+#                     x='Date',
+#                     y='PNL',
+#                     color='Symbol',
+#                     size='Size',
+#                     title='PNL by Symbol Over Time',
+#                     labels={'Date': 'Date', 'PNL': 'Profit/Loss (USDT)', 'Symbol': 'Crypto Symbol'},
+#                     hover_data=['PNL']
+#                 )
+#                 st.plotly_chart(scatter_fig, use_container_width=True)
 
-    if positions_data:
-        positions_df = pd.DataFrame(positions_data)
-        if not positions_df.empty:
-            # Pie Chart: Current Holdings
-            pie_fig = px.pie(
-                positions_df,
-                names='Symbol',
-                values='Size',
-                title='Current Holdings Distribution',
-                color_discrete_sequence=px.colors.qualitative.Set3
-            )
-            st.plotly_chart(pie_fig, use_container_width=True)
+#     if positions_data:
+#         positions_df = pd.DataFrame(positions_data)
+#         if not positions_df.empty:
+#             # Pie Chart: Current Holdings
+#             pie_fig = px.pie(
+#                 positions_df,
+#                 names='Symbol',
+#                 values='Size',
+#                 title='Current Holdings Distribution',
+#                 color_discrete_sequence=px.colors.qualitative.Set3
+#             )
+#             st.plotly_chart(pie_fig, use_container_width=True)
 
-            # Line Chart: Profit Over Time
-            if 'PNL' in positions_df.columns and 'Symbol' in positions_df.columns:
-                profit_line_fig = px.line(
-                    positions_df,
-                    x='Symbol',
-                    y='PNL',
-                    title='Profit by Symbol',
-                    labels={'Symbol': 'Crypto Symbol', 'PNL': 'Profit/Loss (USDT)'},
-                    markers=True,
-                    line_shape='spline'
-                )
-                st.plotly_chart(profit_line_fig, use_container_width=True)
+#             # Line Chart: Profit Over Time
+#             if 'PNL' in positions_df.columns and 'Symbol' in positions_df.columns:
+#                 profit_line_fig = px.line(
+#                     positions_df,
+#                     x='Symbol',
+#                     y='PNL',
+#                     title='Profit by Symbol',
+#                     labels={'Symbol': 'Crypto Symbol', 'PNL': 'Profit/Loss (USDT)'},
+#                     markers=True,
+#                     line_shape='spline'
+#                 )
+#                 st.plotly_chart(profit_line_fig, use_container_width=True)
 
-    if not pnl_data and not positions_data:
-        st.error("Failed to fetch analytics data. Please check the backend.")
+#     if not pnl_data and not positions_data:
+#         st.error("Failed to fetch analytics data. Please check the backend.")
         
 # Main Dashboard
 def main():
