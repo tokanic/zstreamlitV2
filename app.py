@@ -403,8 +403,6 @@ def main():
     st.sidebar.title("Binance Trading Dashboard")
 menu = ["Account Summary", "Positions", "Open Orders", "Trade History", "Position History", "Order History", "Analytics"]
 choice = st.sidebar.radio("Navigation", menu)
-
-
     if choice == "Account Summary":
         account_summary()
     elif choice == "Positions":
