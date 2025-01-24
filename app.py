@@ -408,8 +408,8 @@ def main():
         "Positions", 
         "Open Orders", 
         "Trade History", 
-        "Position History",
-        "Order History",
+        # "Position History",
+        # "Order History",
         "Analytics"
     ]
     choice = st.sidebar.radio("Navigation", menu)
