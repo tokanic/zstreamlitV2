@@ -231,8 +231,6 @@ def order_history():
     except Exception as e:
         st.error(f"An unexpected error occurred: {e}")
 
-
-
 def analytics():
     """Trading Analytics"""
     st.subheader("Trading Analytics")
@@ -272,12 +270,13 @@ def analytics():
 
             # Scatter Plot: PNL by Symbol
             if 'Symbol' in pnl_df.columns:
+                pnl_df['Size'] = pnl_df['PNL'].apply(lambda x: max(0.1, abs(x)))  # Ensure size > 0 for visualization
                 scatter_fig = px.scatter(
                     pnl_df,
                     x='Date',
                     y='PNL',
                     color='Symbol',
-                    size='PNL',
+                    size='Size',
                     title='PNL by Symbol Over Time',
                     labels={'Date': 'Date', 'PNL': 'Profit/Loss (USDT)', 'Symbol': 'Crypto Symbol'},
                     hover_data=['PNL']
@@ -312,7 +311,6 @@ def analytics():
 
     if not pnl_data and not positions_data:
         st.error("Failed to fetch analytics data. Please check the backend.")
-
 # Main Dashboard
 def main():
     st.sidebar.image("https://upload.wikimedia.org/wikipedia/commons/4/4b/Binance_logo.png", width=200)
