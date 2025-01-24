@@ -59,7 +59,7 @@ def account_summary():
             st.metric(label="Total Balance", value=f"{account_summary['Balance']:.2f} USDT")
         
         with col2:
-            st.metric(label="Unrealized PNL", value=account_summary['Unrealized PNL'])
+            st.metric(label="Unrealized PNL", value=f"{account_summary['Unrealized PNL']:.2f} USDT")
         
         with col3:
             st.metric(label="Margin Balance", value=f"{account_summary['Margin Balance']:.2f} USDT")
@@ -75,7 +75,10 @@ def positions():
     if positions_data:
         df = pd.DataFrame(positions_data)
         if not df.empty:
-            st.dataframe(df, use_container_width=True)
+            df.sort_values(by='Entry Price', ascending=False, inplace=True)
+            df['Entry Time'] = df['Entry Time'].apply(format_timestamp)
+            df['PNL'] = df['PNL'].apply(format_pnl)
+            st.dataframe(df, use_container_width=True, height=500)
             # Position Distribution Chart
             fig = px.pie(df, names='Symbol', values='Size', title='Position Size Distribution')
             st.plotly_chart(fig, use_container_width=True)
@@ -90,7 +93,9 @@ def open_orders():
     if open_orders_data:
         df = pd.DataFrame(open_orders_data)
         if not df.empty:
-            st.dataframe(df, use_container_width=True)
+            df.sort_values(by='Order Time', ascending=False, inplace=True)
+            df['Order Time'] = df['Order Time'].apply(format_timestamp)
+            st.dataframe(df, use_container_width=True, height=500)
         else:
             st.warning("No open orders found.")
 
@@ -102,9 +107,12 @@ def trade_history():
     if trade_history_data:
         df = pd.DataFrame(trade_history_data)
         if not df.empty:
-            st.dataframe(df, use_container_width=True)
+            df.sort_values(by='Time', ascending=False, inplace=True)
+            df['Time'] = df['Time'].apply(format_timestamp)
+            df['PNL'] = df['PNL'].apply(format_pnl)
+            st.dataframe(df, use_container_width=True, height=500)
             # PNL Distribution
-            fig = px.histogram(df, x='PNL', title='PNL Distribution')
+            fig = px.histogram(df, x='PNL', title='PNL Distribution', labels={'PNL': 'Profit/Loss (USDT)'})
             st.plotly_chart(fig, use_container_width=True)
         else:
             st.warning("No trade history available.")
@@ -117,9 +125,13 @@ def closed_positions():
     if closed_positions_data:
         df = pd.DataFrame(closed_positions_data)
         if not df.empty:
-            st.dataframe(df, use_container_width=True)
+            df.sort_values(by='Exit Time', ascending=False, inplace=True)
+            df['Entry Time'] = df['Entry Time'].apply(format_timestamp)
+            df['Exit Time'] = df['Exit Time'].apply(format_timestamp)
+            df['PNL'] = df['PNL'].apply(format_pnl)
+            st.dataframe(df, use_container_width=True, height=500)
             # PNL Distribution Chart
-            fig = px.histogram(df, x='PNL', title='Closed Positions PNL Distribution')
+            fig = px.histogram(df, x='PNL', title='Closed Positions PNL Distribution', labels={'PNL': 'Profit/Loss (USDT)'})
             st.plotly_chart(fig, use_container_width=True)
         else:
             st.warning("No closed positions available.")
@@ -132,7 +144,9 @@ def order_history():
     if order_history_data:
         df = pd.DataFrame(order_history_data)
         if not df.empty:
-            st.dataframe(df, use_container_width=True)
+            df.sort_values(by='Order Time', ascending=False, inplace=True)
+            df['Order Time'] = df['Order Time'].apply(format_timestamp)
+            st.dataframe(df, use_container_width=True, height=500)
         else:
             st.warning("No order history found.")
 
@@ -144,12 +158,13 @@ def analytics():
     if pnl_data:
         pnl_df = pd.DataFrame(pnl_data)
         if not pnl_df.empty:
+            pnl_df.sort_values(by='Date', ascending=False, inplace=True)
             # Daily PNL Chart
-            daily_fig = px.bar(pnl_df, x='Date', y='PNL', title='Daily PNL', color='PNL')
+            daily_fig = px.bar(pnl_df, x='Date', y='PNL', title='Daily PNL', labels={'Date': 'Date', 'PNL': 'Profit/Loss (USDT)'}, color='PNL')
             st.plotly_chart(daily_fig, use_container_width=True)
             # Cumulative PNL Chart
             pnl_df['Cumulative PNL'] = pnl_df['PNL'].cumsum()
-            cumulative_fig = px.line(pnl_df, x='Date', y='Cumulative PNL', title='Cumulative PNL')
+            cumulative_fig = px.line(pnl_df, x='Date', y='Cumulative PNL', title='Cumulative PNL', labels={'Date': 'Date', 'Cumulative PNL': 'Cumulative Profit/Loss (USDT)'})
             st.plotly_chart(cumulative_fig, use_container_width=True)
         else:
             st.warning("No analytics data available.")
