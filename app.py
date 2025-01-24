@@ -408,7 +408,7 @@ def main():
         "Positions", 
         "Open Orders", 
         "Trade History", 
-        # "Position History",
+        "Position History",
         # "Order History",
         "Analytics"
     ]
