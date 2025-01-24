@@ -16,7 +16,6 @@ API_SERVER = "http://34.47.211.154:5001"
 def format_timestamp(timestamp):
     """Convert timestamp to Indian Standard Time"""
     try:
-        # Assume timestamp is in milliseconds
         dt = datetime.fromtimestamp(timestamp / 1000, tz=pytz.UTC)
         indian_tz = pytz.timezone('Asia/Kolkata')
         indian_time = dt.astimezone(indian_tz)
@@ -57,32 +56,16 @@ def account_summary():
         col1, col2, col3, col4 = st.columns(4)
         
         with col1:
-            st.metric(
-                label="Total Balance", 
-                value=f"{account_summary['Balance']:.2f} USDT",
-                help="Total account balance"
-            )
+            st.metric(label="Total Balance", value=f"{account_summary['Balance']:.2f} USDT")
         
         with col2:
-            st.metric(
-                label="Unrealized PNL", 
-                value=format_pnl(account_summary['Unrealized PNL']),
-                help="Profit/Loss from open positions"
-            )
+            st.metric(label="Unrealized PNL", value=account_summary['Unrealized PNL'])
         
         with col3:
-            st.metric(
-                label="Margin Balance", 
-                value=f"{account_summary['Margin Balance']:.2f} USDT",
-                help="Available margin for trading"
-            )
+            st.metric(label="Margin Balance", value=f"{account_summary['Margin Balance']:.2f} USDT")
         
         with col4:
-            st.metric(
-                label="Available Balance", 
-                value=f"{account_summary['Available Balance']:.2f} USDT",
-                help="Free balance for new trades"
-            )
+            st.metric(label="Available Balance", value=f"{account_summary['Available Balance']:.2f} USDT")
 
 def positions():
     """Advanced Positions Analysis"""
@@ -91,26 +74,13 @@ def positions():
     
     if positions_data:
         df = pd.DataFrame(positions_data)
-        
-        # Enhanced DataFrame with formatted columns
-        styled_df = df.style.format({
-            'Entry Time': format_timestamp,
-            'Current PNL': format_pnl
-        })
-        
-        st.dataframe(styled_df, use_container_width=True)
-        
-        # Position Distribution Chart
         if not df.empty:
-            fig = px.pie(
-                df, 
-                names='Symbol', 
-                values='Amount', 
-                title='Position Size Distribution'
-            )
+            st.dataframe(df, use_container_width=True)
+            # Position Distribution Chart
+            fig = px.pie(df, names='Symbol', values='Size', title='Position Size Distribution')
             st.plotly_chart(fig, use_container_width=True)
-    else:
-        st.warning("No positions found.")
+        else:
+            st.warning("No active positions found.")
 
 def open_orders():
     """Open Orders Analysis"""
@@ -119,13 +89,10 @@ def open_orders():
     
     if open_orders_data:
         df = pd.DataFrame(open_orders_data)
-        
-        # Format timestamps
-        df['Order Time'] = df['Order Time'].apply(format_timestamp)
-        
-        st.dataframe(df, use_container_width=True)
-    else:
-        st.warning("No open orders found.")
+        if not df.empty:
+            st.dataframe(df, use_container_width=True)
+        else:
+            st.warning("No open orders found.")
 
 def trade_history():
     """Comprehensive Trade History"""
@@ -134,33 +101,13 @@ def trade_history():
     
     if trade_history_data:
         df = pd.DataFrame(trade_history_data)
-        
-        # Dynamically handle column names
-        time_column = [col for col in df.columns if 'time' in col.lower()]
-        pnl_column = [col for col in df.columns if 'pnl' in col.lower()]
-        
-        # Format timestamps if time column exists
-        if time_column:
-            df[time_column[0]] = df[time_column[0]].apply(format_timestamp)
-        
-        # Format PNL if PNL column exists
-        if pnl_column:
-            df[pnl_column[0]] = df[pnl_column[0]].apply(format_pnl)
-        
-        # Interactive Data Table
-        st.dataframe(df, use_container_width=True)
-        
-        # PNL Distribution if PNL column exists
-        if pnl_column:
-            fig = px.histogram(
-                df, 
-                x=pnl_column[0], 
-                title='PNL Distribution',
-                labels={pnl_column[0]: 'Trade Profit/Loss'}
-            )
+        if not df.empty:
+            st.dataframe(df, use_container_width=True)
+            # PNL Distribution
+            fig = px.histogram(df, x='PNL', title='PNL Distribution')
             st.plotly_chart(fig, use_container_width=True)
-    else:
-        st.warning("No trade history available.")
+        else:
+            st.warning("No trade history available.")
 
 def closed_positions():
     """Display Closed Positions"""
@@ -169,22 +116,13 @@ def closed_positions():
     
     if closed_positions_data:
         df = pd.DataFrame(closed_positions_data)
-        df['Entry Time'] = df['Entry Time'].apply(format_timestamp)
-        df['Exit Time'] = df['Exit Time'].apply(format_timestamp)
-        df['PNL'] = df['PNL'].apply(format_pnl)
-        
-        st.dataframe(df, use_container_width=True)
-        
-        # Visualization: PNL Distribution
-        fig = px.histogram(df, x='PNL', title='Closed Positions PNL Distribution')
-        st.plotly_chart(fig, use_container_width=True)
-        
-        # Visualization: Duration vs PNL
-        df['Duration'] = pd.to_datetime(df['Exit Time']) - pd.to_datetime(df['Entry Time'])
-        fig = px.scatter(df, x='Duration', y='PNL', color='Symbol', title='Duration vs PNL')
-        st.plotly_chart(fig, use_container_width=True)
-    else:
-        st.warning("No closed positions found.")
+        if not df.empty:
+            st.dataframe(df, use_container_width=True)
+            # PNL Distribution Chart
+            fig = px.histogram(df, x='PNL', title='Closed Positions PNL Distribution')
+            st.plotly_chart(fig, use_container_width=True)
+        else:
+            st.warning("No closed positions available.")
 
 def order_history():
     """Display Order History"""
@@ -193,142 +131,35 @@ def order_history():
     
     if order_history_data:
         df = pd.DataFrame(order_history_data)
-        df['Order Time'] = df['Order Time'].apply(format_timestamp)
-        
-        st.dataframe(df, use_container_width=True)
-        
-        # Visualization: Order Type Distribution
-        fig = px.pie(df, names='Order Type', title='Order Type Distribution')
-        st.plotly_chart(fig, use_container_width=True)
-        
-        # Visualization: Order Status Distribution
-        fig = px.pie(df, names='Status', title='Order Status Distribution')
-        st.plotly_chart(fig, use_container_width=True)
-    else:
-        st.warning("No order history found.")
+        if not df.empty:
+            st.dataframe(df, use_container_width=True)
+        else:
+            st.warning("No order history found.")
 
 def analytics():
-    """Advanced Trading Analytics with Enhanced Visualizations"""
+    """Trading Analytics"""
     st.subheader("Trading Analytics")
-    
-    # Fetch PNL and Trade Data
     pnl_data = fetch_data("pnl_analytics")
-    trade_history_data = fetch_data("trade_history")
     
-    if pnl_data and trade_history_data:
+    if pnl_data:
         pnl_df = pd.DataFrame(pnl_data)
-        trades_df = pd.DataFrame(trade_history_data)
-        
         if not pnl_df.empty:
-            # Advanced Daily PNL Bar Chart
-            daily_fig = px.bar(
-                pnl_df, 
-                x="Date", 
-                y="PNL", 
-                title="Daily Performance Analysis",
-                labels={
-                    "Date": "Trading Date", 
-                    "PNL": "Daily Profit/Loss (USDT)"
-                },
-                color="PNL",
-                color_continuous_scale=px.colors.sequential.YlGnBu,
-                color_continuous_midpoint=0
-            )
-            daily_fig.update_layout(
-                xaxis_title="Trading Date",
-                yaxis_title="Daily Profit/Loss (USDT)",
-                coloraxis_colorbar_title="PNL"
-            )
+            # Daily PNL Chart
+            daily_fig = px.bar(pnl_df, x='Date', y='PNL', title='Daily PNL', color='PNL')
             st.plotly_chart(daily_fig, use_container_width=True)
-            
-            # Enhanced Cumulative PNL Line Chart with Percentage
+            # Cumulative PNL Chart
             pnl_df['Cumulative PNL'] = pnl_df['PNL'].cumsum()
-            pnl_df['Cumulative PNL %'] = (pnl_df['Cumulative PNL'] / pnl_df['PNL'].abs().max()) * 100
-            
-            cumulative_fig = go.Figure()
-            
-            # Primary Y-Axis: Cumulative PNL in USDT
-            cumulative_fig.add_trace(go.Scatter(
-                x=pnl_df['Date'], 
-                y=pnl_df['Cumulative PNL'],
-                mode='lines+markers',
-                name='Total Profit/Loss (USDT)',
-                line=dict(color='blue', width=3),
-                marker=dict(size=8)
-            ))
-            
-            # Secondary Y-Axis: Cumulative PNL Percentage
-            cumulative_fig.add_trace(go.Scatter(
-                x=pnl_df['Date'], 
-                y=pnl_df['Cumulative PNL %'],
-                mode='lines',
-                name='Cumulative PNL (%)',
-                line=dict(color='green', width=2, dash='dot'),
-                yaxis='y2'
-            ))
-            
-            cumulative_fig.update_layout(
-                title='Cumulative Trading Performance',
-                xaxis_title='Date',
-                yaxis_title='Total Profit/Loss (USDT)',
-                yaxis2=dict(
-                    title='Cumulative PNL (%)',
-                    overlaying='y',
-                    side='right',
-                    showgrid=False
-                ),
-                legend_title_text='Performance Metrics'
-            )
+            cumulative_fig = px.line(pnl_df, x='Date', y='Cumulative PNL', title='Cumulative PNL')
             st.plotly_chart(cumulative_fig, use_container_width=True)
-        
-        # Trade Size and Symbol Distribution
-        if not trades_df.empty:
-            # Scatter Plot: Price vs PNL
-            trade_scatter = px.scatter(
-                trades_df, 
-                x='Price', 
-                y='PNL', 
-                color='Symbol',
-                title='Trade Price vs Profit/Loss by Symbol',
-                labels={
-                    'Price': 'Trade Execution Price', 
-                    'PNL': 'Trade Profit/Loss (USDT)'
-                },
-                hover_data=['Symbol', 'Time']
-            )
-            st.plotly_chart(trade_scatter, use_container_width=True)
-            
-            # Pie Chart: Trade Size Distribution
-            trade_size_fig = px.pie(
-                trades_df, 
-                names='Symbol', 
-                values='Quantity', 
-                title='Trade Size Distribution by Crypto Symbol',
-                hole=0.3
-            )
-            st.plotly_chart(trade_size_fig, use_container_width=True)
-    else:
-        st.warning("Insufficient data for analytics visualization.")
+        else:
+            st.warning("No analytics data available.")
 
 # Main Dashboard
 def main():
-    # Sidebar
     st.sidebar.image("https://upload.wikimedia.org/wikipedia/commons/4/4b/Binance_logo.png", width=200)
     st.sidebar.title("Binance Trading Dashboard")
-    
-    # Navigation
-    menu = [
-        "Account Summary", 
-        "Positions", 
-        "Open Orders", 
-        "Trade History", 
-        "Closed Positions",
-        "Order History",
-        "Analytics"
-    ]
+    menu = ["Account Summary", "Positions", "Open Orders", "Trade History", "Closed Positions", "Order History", "Analytics"]
     choice = st.sidebar.radio("Navigation", menu)
-    
-    # Routing
     if choice == "Account Summary":
         account_summary()
     elif choice == "Positions":
@@ -343,11 +174,8 @@ def main():
         order_history()
     elif choice == "Analytics":
         analytics()
-    
-    # Footer
     st.markdown("---")
     st.text("© 2025 Binance Trading Dashboard")
 
-# Run the app
 if __name__ == "__main__":
     main()
