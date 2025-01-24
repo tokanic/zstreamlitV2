@@ -12,6 +12,7 @@ st.set_page_config(page_title="Binance Trading Dashboard", layout="wide")
 # Server Configuration
 API_SERVER = "http://34.47.211.154:5001"
 
+
 # Utility Functions
 def format_timestamp(timestamp):
     """Convert timestamp to Indian Standard Time"""
@@ -23,18 +24,14 @@ def format_timestamp(timestamp):
     except:
         return "Invalid Time"
 
-def format_pnl(pnl):
-    """Format PNL with color coding"""
-    try:
-        pnl = float(pnl)
-        if pnl > 0:
-            return f'<span style="color:green">+{pnl:.2f} USDT</span>'
-        elif pnl < 0:
-            return f'<span style="color:red">{pnl:.2f} USDT</span>'
-        else:
-            return f'{pnl:.2f} USDT'
-    except:
-        return "N/A"
+def color_pnl(value):
+    """Return color-coded PNL for Streamlit"""
+    if value > 0:
+        return f"<span style='color:green'>+{value:.2f} USDT</span>"
+    elif value < 0:
+        return f"<span style='color:red'>{value:.2f} USDT</span>"
+    else:
+        return f"{value:.2f} USDT"
 
 def fetch_data(endpoint):
     """Fetch data from API with error handling"""
@@ -45,6 +42,26 @@ def fetch_data(endpoint):
     except requests.exceptions.RequestException as e:
         st.error(f"Error fetching data: {e}")
         return None
+
+def filter_by_time(df, column, interval):
+    """Filter DataFrame by time interval"""
+    now = datetime.now(pytz.timezone('Asia/Kolkata'))
+    if interval == '1 Day':
+        start_time = now - timedelta(days=1)
+    elif interval == '1 Week':
+        start_time = now - timedelta(weeks=1)
+    elif interval == 'Custom':
+        start_date = st.date_input("Start Date", value=datetime.now().date())
+        end_date = st.date_input("End Date", value=datetime.now().date())
+        if start_date and end_date:
+            start_time = datetime.combine(start_date, datetime.min.time(), tzinfo=pytz.timezone('Asia/Kolkata'))
+            end_time = datetime.combine(end_date, datetime.max.time(), tzinfo=pytz.timezone('Asia/Kolkata'))
+            return df[(df[column] >= start_time) & (df[column] <= end_time)]
+    else:
+        return df
+
+    return df[df[column] >= start_time]
+
 
 # Dashboard Sections
 def account_summary():
