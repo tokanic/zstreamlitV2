@@ -401,8 +401,20 @@ def analytics():
 def main():
     st.sidebar.image("https://upload.wikimedia.org/wikipedia/commons/4/4b/Binance_logo.png", width=200)
     st.sidebar.title("Binance Trading Dashboard")
-menu = ["Account Summary", "Positions", "Open Orders", "Trade History", "Position History", "Order History", "Analytics"]
-choice = st.sidebar.radio("Navigation", menu)
+    
+    # Navigation
+    menu = [
+        "Account Summary", 
+        "Positions", 
+        "Open Orders", 
+        "Trade History", 
+        "Position History",
+        "Order History",
+        "Analytics"
+    ]
+    choice = st.sidebar.radio("Navigation", menu)
+    
+    # Routing
     if choice == "Account Summary":
         account_summary()
     elif choice == "Positions":
@@ -412,7 +424,7 @@ choice = st.sidebar.radio("Navigation", menu)
     elif choice == "Trade History":
         trade_history()
     elif choice == "Position History":
-    position_history()
+        position_history()
     elif choice == "Order History":
         order_history()
     elif choice == "Analytics":
