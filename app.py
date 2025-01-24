@@ -225,7 +225,7 @@ def order_history():
             else:
                 st.warning("No order history found.")
         else:
-            st.warning("No data received from the backend. Please check the API response.")
+            st.error("No data received from the backend. Please ensure the `/order_history` endpoint is correctly configured.")
     except requests.exceptions.HTTPError as http_err:
         st.error(f"HTTP error occurred: {http_err}")
     except Exception as e:
@@ -237,19 +237,81 @@ def analytics():
     """Trading Analytics"""
     st.subheader("Trading Analytics")
     pnl_data = fetch_data("pnl_analytics")
-    
+    positions_data = fetch_data("positions")
+
     if pnl_data:
         pnl_df = pd.DataFrame(pnl_data)
         if not pnl_df.empty:
+            # Sort by Date, latest first
+            pnl_df.sort_values(by='Date', ascending=False, inplace=True)
+
             # Daily PNL Chart
-            daily_fig = px.bar(pnl_df, x='Date', y='PNL', title='Daily PNL', color='PNL')
+            daily_fig = px.bar(
+                pnl_df,
+                x='Date',
+                y='PNL',
+                title='Daily PNL',
+                labels={'Date': 'Date', 'PNL': 'Profit/Loss (USDT)'},
+                color='PNL',
+                color_continuous_scale=px.colors.sequential.Viridis
+            )
             st.plotly_chart(daily_fig, use_container_width=True)
+
             # Cumulative PNL Chart
             pnl_df['Cumulative PNL'] = pnl_df['PNL'].cumsum()
-            cumulative_fig = px.line(pnl_df, x='Date', y='Cumulative PNL', title='Cumulative PNL')
+            cumulative_fig = px.line(
+                pnl_df,
+                x='Date',
+                y='Cumulative PNL',
+                title='Cumulative PNL',
+                labels={'Date': 'Date', 'Cumulative PNL': 'Cumulative Profit/Loss (USDT)'},
+                line_shape='linear',
+                markers=True
+            )
             st.plotly_chart(cumulative_fig, use_container_width=True)
-        else:
-            st.warning("No analytics data available.")
+
+            # Scatter Plot: PNL by Symbol
+            if 'Symbol' in pnl_df.columns:
+                scatter_fig = px.scatter(
+                    pnl_df,
+                    x='Date',
+                    y='PNL',
+                    color='Symbol',
+                    size='PNL',
+                    title='PNL by Symbol Over Time',
+                    labels={'Date': 'Date', 'PNL': 'Profit/Loss (USDT)', 'Symbol': 'Crypto Symbol'},
+                    hover_data=['PNL']
+                )
+                st.plotly_chart(scatter_fig, use_container_width=True)
+
+    if positions_data:
+        positions_df = pd.DataFrame(positions_data)
+        if not positions_df.empty:
+            # Pie Chart: Current Holdings
+            pie_fig = px.pie(
+                positions_df,
+                names='Symbol',
+                values='Size',
+                title='Current Holdings Distribution',
+                color_discrete_sequence=px.colors.qualitative.Set3
+            )
+            st.plotly_chart(pie_fig, use_container_width=True)
+
+            # Line Chart: Profit Over Time
+            if 'PNL' in positions_df.columns and 'Symbol' in positions_df.columns:
+                profit_line_fig = px.line(
+                    positions_df,
+                    x='Symbol',
+                    y='PNL',
+                    title='Profit by Symbol',
+                    labels={'Symbol': 'Crypto Symbol', 'PNL': 'Profit/Loss (USDT)'},
+                    markers=True,
+                    line_shape='spline'
+                )
+                st.plotly_chart(profit_line_fig, use_container_width=True)
+
+    if not pnl_data and not positions_data:
+        st.error("Failed to fetch analytics data. Please check the backend.")
 
 # Main Dashboard
 def main():
