@@ -10,7 +10,7 @@ import pytz
 st.set_page_config(page_title="Binance Trading Dashboard", layout="wide")
 
 # Server Configuration
-API_SERVER = "http://34.100.176.18:5001"
+API_SERVER = "http://34.100.176.18:5000"
 
 # Utility Functions
 def format_timestamp(timestamp):
