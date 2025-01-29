@@ -598,8 +598,8 @@ def main():
         position_history()
     elif choice == "Analytics":
         analytics()
-    elif choice == "Traders with Open Positions":
-        traders_with_open_positions()  # Call the new function
+    # elif choice == "Traders with Open Positions":
+    #     traders_with_open_positions()  # Call the new function
     elif choice == "Closed Positions Analysis":
         closed_positions_cost_analysis()  # Call the new function
     st.markdown("---")
