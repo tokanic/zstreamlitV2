@@ -9,22 +9,21 @@ import pytz
 # Set page configuration
 st.set_page_config(page_title="🚀 Enhanced Binance Trading Dashboard", layout="wide")
 
-# Apply custom CSS for styling and animations
 st.markdown(
     """
     <style>
-    /* Main app container styling */
+    /* Main app container styling with gradient and neon glow */
     [data-testid="stAppViewContainer"] {
-        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-        color: #ffffff;
+        background: linear-gradient(135deg, #0d0d0d 0%, #1f1f1f 100%);
+        color: white;
         min-height: 100vh;
     }
 
-    /* Sidebar styling */
+    /* Sidebar styling with frosted glass effect */
     [data-testid="stSidebar"] {
-        background: rgba(16, 22, 36, 0.8);
-        backdrop-filter: blur(10px);
-        border-right: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(18, 18, 18, 0.85);
+        backdrop-filter: blur(12px);
+        border-right: 2px solid rgba(255, 255, 255, 0.1);
     }
 
     /* Sidebar header styling */
@@ -32,29 +31,31 @@ st.markdown(
         padding: 20px;
     }
 
-    /* Flashcard styling with animations */
+    /* Flashcard styling with animated glow effect */
     .flashcard {
-        background: linear-gradient(145deg, #ff6b6b, #ff8e8e);
+        background: linear-gradient(145deg, #ff007f, #ff4d4d);
         padding: 25px;
         border-radius: 15px;
         margin: 15px 0;
         color: white;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 0 15px rgba(255, 0, 127, 0.6);
         transform-style: preserve-3d;
-        transition: all 0.3s ease;
+        transition: all 0.4s ease-in-out;
         cursor: pointer;
         min-height: 150px;
         display: flex;
         align-items: center;
         justify-content: center;
         text-align: center;
-        font-size: 1.2rem;
+        font-size: 1.3rem;
+        font-weight: bold;
+        text-shadow: 2px 2px 10px rgba(255, 255, 255, 0.8);
     }
 
-    /* Hover effect for flashcard */
+    /* Hover effect for flashcard with pulsating glow */
     .flashcard:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+        transform: scale(1.05);
+        box-shadow: 0 0 20px rgba(255, 0, 127, 0.8);
     }
 
     /* Flip animation for flashcard */
@@ -68,55 +69,77 @@ st.markdown(
         to { transform: rotateY(180deg); }
     }
 
-    /* General text styling */
+    /* General text styling with glow effect */
     body {
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        font-family: 'Poppins', sans-serif;
         line-height: 1.6;
     }
 
-    /* Header styling */
+    /* Header styling with gradient text */
     h1, h2, h3 {
-        color: #ff6b6b;
-        margin-bottom: 1rem;
+        background: linear-gradient(to right, #ff007f, #ff4d4d);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-weight: bold;
+        text-shadow: 2px 2px 10px rgba(255, 255, 255, 0.5);
     }
 
-    /* Button styling */
+    /* Button styling with animated hover effect */
     .stButton>button {
-        background: linear-gradient(45deg, #ff6b6b, #ff8e8e);
+        background: linear-gradient(45deg, #ff007f, #ff4d4d);
         color: white;
         border: none;
         border-radius: 25px;
-        padding: 10px 25px;
+        padding: 12px 28px;
         font-weight: bold;
-        transition: all 0.3s ease;
+        font-size: 16px;
+        text-transform: uppercase;
+        transition: all 0.3s ease-in-out;
+        box-shadow: 0 5px 15px rgba(255, 0, 127, 0.6);
+        cursor: pointer;
     }
 
     /* Button hover effect */
     .stButton>button:hover {
-        transform: scale(1.05);
-        box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
+        transform: scale(1.1);
+        box-shadow: 0 5px 20px rgba(255, 0, 127, 0.9);
     }
 
-    /* Input field styling */
+    /* Input field styling with glow effect */
     .stTextInput>div>div>input {
         background: rgba(255, 255, 255, 0.1);
         color: white;
         border-radius: 10px;
-        border: 1px solid rgba(255, 255, 255, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        padding: 10px;
+        font-weight: bold;
     }
 
-    /* Custom scrollbar */
+    /* Custom scrollbar with neon effect */
     ::-webkit-scrollbar {
-        width: 8px;
+        width: 10px;
     }
 
     ::-webkit-scrollbar-track {
-        background: rgba(255, 255, 255, 0.05);
+        background: rgba(255, 255, 255, 0.1);
     }
 
     ::-webkit-scrollbar-thumb {
-        background: #ff6b6b;
-        border-radius: 4px;
+        background: linear-gradient(180deg, #ff007f, #ff4d4d);
+        border-radius: 5px;
+    }
+
+    /* Touch-friendly enhancements */
+    @media (max-width: 768px) {
+        .flashcard {
+            font-size: 1rem;
+            padding: 20px;
+        }
+
+        .stButton>button {
+            padding: 10px 22px;
+            font-size: 14px;
+        }
     }
     </style>
     """,
